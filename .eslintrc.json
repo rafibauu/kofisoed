@@ -1,0 +1,28 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true,
+    "jest": true,
+    "node": true
+  },
+  "extends": ["airbnb", "prettier"],
+  "plugins": ["prettier", "react"],
+  "parser": "babel-eslint",
+  "rules": {
+    "semi": ["error", "never"],
+    "no-unused-vars": "error",
+    "no-console": "error",
+    "func-names": ["off"],
+    "prettier/prettier": ["error", { "semi": false, "singleQuote": true }],
+    "react/jsx-filename-extension": [
+      "error",
+      { "extensions": [".js", ".jsx"] }
+    ],
+    "react/jsx-curly-newline": ["off"],
+    "react/state-in-constructor": ["error", "never"],
+    "react/forbid-prop-types": ["off"],
+    "react/jsx-props-no-spreading": ["off"],
+    "react/require-default-props": ["off"]
+  }
+}
