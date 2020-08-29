@@ -3,26 +3,22 @@ import PropTypes from 'prop-types'
 import { Route, Redirect } from 'react-router-dom'
 import { connect } from 'react-redux'
 
-import { LogoutByAuthExpired } from '../../state/modules/auth'
-import UserAutoLogout from './UserAutoLogout'
+import { LogoutByAuthExpired as LogoutByAuthExpiredAction } from '../../state/modules/auth'
+import PrivateAutoLogout from './PrivateAutoLogout'
 
 const PrivateRoute = (rootProps) => {
   const {
     component: Component,
     auth,
-    authExpiredLogoutRequestProps,
-    ...rest
+    LogoutByAuthExpired,
+    ...routerProps
   } = rootProps
 
   const nowMilis = new Date().getTime()
   const { isLoggedIn, expiredMilis, redirectAfterLogout } = auth
 
   if (expiredMilis !== 0 && nowMilis >= expiredMilis) {
-    return (
-      <UserAutoLogout
-        authExpiredLogoutRequestProps={authExpiredLogoutRequestProps}
-      />
-    )
+    return <PrivateAutoLogout LogoutByAuthExpired={LogoutByAuthExpired} />
   }
 
   if (redirectAfterLogout) {
@@ -31,20 +27,20 @@ const PrivateRoute = (rootProps) => {
 
   return (
     <Route
-      {...rest}
-      render={(childProps) => {
+      {...routerProps}
+      render={(props) => {
         if (!isLoggedIn) {
           return (
             <Redirect
               to={{
                 pathname: '/login',
-                state: { from: childProps.location }
+                state: { from: props.location }
               }}
             />
           )
         }
 
-        return <Component {...childProps} />
+        return <Component {...props} />
       }}
     />
   )
@@ -57,7 +53,7 @@ PrivateRoute.propTypes = {
 }
 
 const mapDispatchToProps = (dispatch) => ({
-  authExpiredLogoutRequestProps: () => dispatch(LogoutByAuthExpired())
+  LogoutByAuthExpired: () => dispatch(LogoutByAuthExpiredAction())
 })
 
 export default connect(null, mapDispatchToProps)(PrivateRoute)

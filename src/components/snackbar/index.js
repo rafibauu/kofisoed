@@ -8,7 +8,7 @@ class AppSnackbar extends React.Component {
   }
 
   render() {
-    const { open, message, hideSnackbar } = this.props
+    const { open, message, onClose } = this.props
     const { hideAfter } = this.state
     return (
       <Snackbar
@@ -18,7 +18,7 @@ class AppSnackbar extends React.Component {
         }}
         open={open}
         autoHideDuration={hideAfter}
-        onClose={hideSnackbar}
+        onClose={onClose}
         message={<span id="message-id">{message}</span>}
       />
     )
@@ -28,7 +28,7 @@ class AppSnackbar extends React.Component {
 AppSnackbar.propTypes = {
   open: PropTypes.bool,
   message: PropTypes.any,
-  hideSnackbar: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired
 }
 
 export default AppSnackbar

@@ -16,20 +16,14 @@ const NetworkErrorAnimOptions = {
   }
 }
 
-const loadingState = (classes, text) => {
+const loadingWithText = (classes, text) => {
   return (
-    <FadeIn style={{ display: 'flex' }}>
-      <Grid container alignItems="center">
-        <Typography
-          variant="h6"
-          color="primary"
-          className={classes.loadingText}
-        >
-          {text || `Fetching data from database`}
-        </Typography>
-        <CircularProgress />
-      </Grid>
-    </FadeIn>
+    <Grid container alignItems="center" justify="center">
+      <Typography variant="h6" color="primary" className={classes.loadingText}>
+        {text}
+      </Typography>
+      <CircularProgress variant="indeterminate" disableShrink />
+    </Grid>
   )
 }
 
@@ -55,7 +49,7 @@ const networkErrorState = (classes, text) => {
   )
 }
 
-const loadComponentState = () => {
+const loadingWithDisableShrink = () => {
   return (
     <Grid container alignItems="center" justify="center">
       <CircularProgress variant="indeterminate" disableShrink />
@@ -63,19 +57,24 @@ const loadComponentState = () => {
   )
 }
 
+const loadingDefault = () => <CircularProgress variant="indeterminate" />
+
 const stateMapping = (classes, state, text) => {
   switch (state) {
     case 'networkError':
       return networkErrorState(classes, text)
-    case 'component':
-      return loadComponentState()
+    case 'text':
+      return loadingWithText(classes, text)
+    case 'disabledShrink':
+      return loadingWithDisableShrink()
+    case 'default':
     default:
-      return loadingState(classes, text)
+      return loadingDefault()
   }
 }
 
 const AppPageLoading = React.memo((props) => {
-  const { classes, state, text } = props
+  const { classes, state = 'default', text } = props
   return (
     <div className={classes.circularRoot}>
       {stateMapping(classes, state, text)}
@@ -85,7 +84,7 @@ const AppPageLoading = React.memo((props) => {
 
 AppPageLoading.propTypes = {
   classes: PropTypes.instanceOf(Object).isRequired,
-  state: PropTypes.string.isRequired,
+  state: PropTypes.string,
   text: PropTypes.string
 }
 

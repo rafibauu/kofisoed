@@ -3,22 +3,27 @@ import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 import { PersistGate } from 'redux-persist/es/integration/react'
 
-import RootStore from './state/store'
-import { AutoLogin } from './state/modules/auth'
+import rootStore from './state/store'
+import AppElement from './App'
+import CircularLoading from './components/loading/circular'
 import * as serviceWorker from './serviceWorker'
-import App from './App'
-import Preload from './components/preload'
+import { AutoLogin } from './state/modules/auth'
 import ENV from './env'
+import Security from './utils/security'
 
 document.title = `${ENV.APP_NAME} | ${ENV.CLIENT_NAME}`
+Security.preventPrintScreenKey()
+
 ReactDOM.render(
-  <Provider store={RootStore.configureStore}>
+  <Provider store={rootStore.configureStore}>
     <PersistGate
-      loading={<Preload />}
-      onBeforeLift={() => RootStore.configureStore.dispatch(AutoLogin())}
-      persistor={RootStore.configurePersistor}
+      loading={<CircularLoading />}
+      onBeforeLift={() => {
+        rootStore.configureStore.dispatch(AutoLogin())
+      }}
+      persistor={rootStore.configurePersistor}
     >
-      <App />
+      <AppElement />
     </PersistGate>
   </Provider>,
   document.getElementById('root')
@@ -26,5 +31,5 @@ ReactDOM.render(
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
+// Learn more about service workers: http://bit.ly/CRA-PWA
 serviceWorker.unregister()

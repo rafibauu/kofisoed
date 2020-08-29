@@ -10,13 +10,10 @@ export default createMuiTheme({
       main: ENV.APP_COLOR.primary
     },
     secondary: {
-      main: ENV.APP_COLOR.secondary
+      main: ENV.APP_COLOR.secondary,
     }
   },
   typography: {
     useNextVariants: true,
-    button: {
-      textTransform: 'none'
-    }
   }
 })

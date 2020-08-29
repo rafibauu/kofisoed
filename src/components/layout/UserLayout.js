@@ -1,160 +1,293 @@
-import React, { PureComponent, Suspense } from 'react'
-import { Route, Switch, Link } from 'react-router-dom'
+import React, { Suspense } from 'react'
+import PropTypes from 'prop-types'
+import { Switch, Route } from 'react-router-dom'
 import { compose } from 'redux'
 import { connect } from 'react-redux'
 import { withFirebase } from 'react-redux-firebase'
-import PropTypes from 'prop-types'
-import Img from 'react-image'
-import { AppBar, IconButton, Toolbar, Typography } from '@material-ui/core/'
-import withStyles from '@material-ui/core/styles/withStyles'
-import { ExitToApp } from '@material-ui/icons'
-import styles from './styles'
+import { AppBar, Container, IconButton, Toolbar } from '@material-ui/core'
+import ExitToApp from '@material-ui/icons/ExitToApp'
+import { withStyles } from '@material-ui/core/styles'
+import styles from './styles/index'
 
+import ENV from '../../env'
+import { SendLogActivity as SendLogActivityAction } from '../../state/modules/app'
 import { Logout as LogoutAction } from '../../state/modules/auth'
 import { LoadAssessment as LoadAssessmentAction } from '../../state/modules/dashboard'
-import ErrorBoundary from '../error/boundary'
+import Camera from '../Camera'
 import CircularLoading from '../loading/circular'
-import RouteList from '../../constants/route'
-import AppLogoutConfirmation from '../confirmation'
-import Text from '../../constants/general'
-import ENV from '../../env'
+import LogoutConfirmation from '../confirmation'
+import LazyComponentErrorBoundary from '../error/boundary'
 
-const VerificationComponent = React.lazy(() =>
-  import('../../pages/verfication')
-)
-const DashboardComponent = React.lazy(() => import('../../pages/dashboard'))
-const InstructionComponent = React.lazy(() => import('../../pages/instruction'))
-const AssessmentComponent = React.lazy(() => import('../../pages/assessment'))
+const Verification = React.lazy(() => import('../../pages/'))
+const Dashboard = React.lazy(() => import('../../pages/dashboard'))
+const Instruction = React.lazy(() => import('../../pages/instruction'))
+const Simulation = React.lazy(() => import('../../pages/simulation'))
+const Assessment = React.lazy(() => import('../../pages/assessment'))
 
-class PrivateLayout extends PureComponent {
+const noImageUrl =
+  'https://firebasestorage.googleapis.com/v0/b/firetica-talentlytica.appspot.com/o/no-image.jpg?alt=media&token=1a229686-cbd2-4a3b-b8c8-731a362acdef'
+
+class Layout extends React.PureComponent {
   state = {
-    shouldOpenLogoutConfirmation: false
+    isConfirmOpen: false,
+    confirmMessage: ''
   }
 
   componentDidMount() {
-    const { LoadAssessment } = this.props
-    LoadAssessment('load')
+    const { dashboard, LoadAssessment } = this.props
+    if (!dashboard.corporate) {
+      LoadAssessment()
+    }
+    this.startIntervalCamera()
+  }
+
+  componentWillUnmount() {
+    if (this.intervalCamera) {
+      clearInterval(this.intervalCamera)
+    }
+  }
+
+  startIntervalCamera = () => {
+    if (!this.intervalCamera) {
+      this.intervalCamera = setInterval(
+        this.handleTakePhotoSilently,
+        900000,
+        this.webcam
+      )
+    }
+  }
+
+  setWebcamRef = (webcam) => {
+    this.webcam = webcam
+  }
+
+  handleTakePhotoSilently = async (event) => {
+    const { firebase, auth, SendLogActivity } = this.props
+    const { uuid } = auth.user
+    const screenshot = this.webcam.current.getScreenshot()
+    const now = Date.now()
+    const eventScreenshot = event || `random-${now}`
+    if (screenshot && uuid !== 0) {
+      const { storage } = firebase
+      const photoRef = storage().ref(`images/snap-interval/${uuid}/${now}.jpg`)
+      try {
+        const photoSnap = await photoRef.putString(screenshot, 'data_url')
+        const photoUrl = await photoSnap.ref.getDownloadURL()
+        firebase.push(`session/${uuid}/intervalPhotos`, {
+          status: 'captured',
+          photoUrl,
+          event: eventScreenshot,
+          contentType: photoSnap.metadata.contentType,
+          bucket: photoSnap.metadata.bucket,
+          fullPath: photoSnap.metadata.fullPath,
+          createdAt: now,
+          log: 'Berhasil mengambil dan mengupload foto interval'
+        })
+        SendLogActivity({
+          mode: 'undirect',
+          data: {
+            type: 'activity',
+            date: now,
+            log: `berhasil mengambil dan mengupload foto interval ${eventScreenshot}`
+          }
+        })
+      } catch (e) {
+        firebase.push(`session/${uuid}/intervalPhotos`, {
+          status: 'error',
+          event: eventScreenshot,
+          createdAt: now,
+          photoUrl: noImageUrl,
+          log: `Gagal dalam mengupload foto interval : ${e}`
+        })
+        SendLogActivity({
+          mode: 'undirect',
+          data: {
+            type: 'error',
+            date: now,
+            log: `gagal mengupload foto interval ${eventScreenshot}`
+          }
+        })
+      }
+    } else {
+      firebase.push(`session/${uuid}/intervalPhotos`, {
+        status: 'not-captured',
+        event: eventScreenshot,
+        createdAt: now,
+        photoUrl: noImageUrl,
+        log: 'Gagal mengambil foto : Driver or permission problem'
+      })
+      SendLogActivity({
+        mode: 'undirect',
+        data: {
+          type: 'error',
+          date: now,
+          log: `gagal mengambil foto interval ${eventScreenshot}`
+        }
+      })
+    }
+  }
+
+  handleGetMediaStatus = (condition, message) => {
+    const { firebase, app, auth, SendLogActivity } = this.props
+    const { clientUniqueId } = app
+    const { uuid } = auth.user
+    const date = new Date().getTime()
+    const log =
+      condition === 'error' ? `Camera error on first load: ${message}` : message
+    firebase.update(`session/${uuid}/camera`, { [clientUniqueId]: log })
+    SendLogActivity({
+      mode: 'undirect',
+      data: {
+        clientUniqueId,
+        date,
+        log,
+        status: condition,
+        type: 'camera-log'
+      }
+    })
   }
 
   handleOpenConfirmation = () => {
-    this.setState({ shouldOpenLogoutConfirmation: true })
+    this.setState({
+      isConfirmOpen: true,
+      confirmMessage: 'Are you sure want to logout?'
+    })
   }
 
-  handleConfirmationNo = () => {
-    this.setState({ shouldOpenLogoutConfirmation: false })
+  handleConfirmNo = () => {
+    this.setState({ isConfirmOpen: false })
   }
 
-  handleConfirmationYes = () => {
+  handleConfirmYes = () => {
     const { Logout } = this.props
     Logout()
   }
 
   render() {
-    const { classes, app, auth, firebaseAuth } = this.props
-    const { shouldOpenLogoutConfirmation } = this.state
-    const { logoutConfirmation } = Text.sentences
+    const { classes, auth, dashboard, firebaseAuth } = this.props
+    const { confirmMessage, isConfirmOpen } = this.state
+    const loading = auth.loading || firebaseAuth.isEmpty
 
-    if (app.isLoading || !firebaseAuth.isLoaded) {
-      return <CircularLoading state="component" />
+    if (loading) {
+      return <CircularLoading />
     }
-
-    const { dashboard } = this.props
-    const { project } = dashboard
 
     return (
       <>
-        <AppBar position="fixed" className={classes.appBar}>
-          <Toolbar variant="regular" className={classes.toolbar}>
-            <Link to="/" className={classes.brand}>
-              <Img src={ENV.CLIENT_LOGO} className={classes.topBarImageLogo} />
-            </Link>
-            <div className={classes.toolbarOption}>
-              <Typography color="primary" className={classes.toolbarUsername}>
-                {auth.user.email}
-              </Typography>
+        <Camera hidden setWebcamRef={this.setWebcamRef} />
+        <AppBar position="fixed" color="primary">
+          <Toolbar>
+            <div className={classes.logoContainer}>
+              <img
+                className={classes.mainLogo}
+                src={ENV.CLIENT_LOGO}
+                alt={`${ENV.CLIENT_NAME} Logo`}
+              />
+            </div>
+            <div className={classes.menu}>
               <IconButton
+                id="logout-button"
                 onClick={this.handleOpenConfirmation}
-                className={classes.signOutIcon}
+                color="inherit"
               >
-                <ExitToApp color="primary" />
+                <ExitToApp />
               </IconButton>
             </div>
           </Toolbar>
         </AppBar>
-        <main className={classes.main}>
-          {!project.id ? (
-            <CircularLoading state="component" />
-          ) : (
-            <ErrorBoundary>
-              <Suspense fallback={<CircularLoading state="component" />}>
-                <Switch>
-                  <Route
-                    exact
-                    path={RouteList.verification}
-                    render={(props) => (
-                      <VerificationComponent
-                        {...props}
-                        appAuth={auth}
-                        firebaseAuth={firebaseAuth}
-                      />
-                    )}
-                  />
-                  <Route
-                    path={RouteList.dashboard}
-                    render={(props) => (
-                      <DashboardComponent
-                        {...props}
-                        appAuth={auth}
-                        firebaseAuth={firebaseAuth}
-                      />
-                    )}
-                  />
-                  <Route
-                    path={RouteList.instruction}
-                    render={(props) => (
-                      <InstructionComponent
-                        {...props}
-                        appAuth={auth}
-                        firebaseAuth={firebaseAuth}
-                      />
-                    )}
-                  />
-                  <Route
-                    path={RouteList.assessment}
-                    render={(props) => (
-                      <AssessmentComponent
-                        {...props}
-                        appAuth={auth}
-                        firebaseAuth={firebaseAuth}
-                      />
-                    )}
-                  />
-                </Switch>
-              </Suspense>
-            </ErrorBoundary>
-          )}
+        <main className={classes.body}>
+          <Container
+            maxWidth="sm"
+            style={{ display: 'flex', justifyContent: 'center' }}
+          >
+            {dashboard.isLoading ? (
+              <CircularLoading />
+            ) : (
+              <LazyComponentErrorBoundary>
+                <Suspense fallback={<CircularLoading />}>
+                  <Switch>
+                    <Route
+                      path="/instruction/:slug"
+                      render={(props) => (
+                        <Instruction
+                          {...props}
+                          appAuth={auth}
+                          firebaseAuth={firebaseAuth}
+                        />
+                      )}
+                    />
+                    <Route
+                      path="/simulation/:slug"
+                      render={(props) => (
+                        <Simulation
+                          {...props}
+                          appAuth={auth}
+                          firebaseAuth={firebaseAuth}
+                        />
+                      )}
+                    />
+                    <Route
+                      path="/assessment/:slug"
+                      render={(props) => (
+                        <Assessment
+                          {...props}
+                          appAuth={auth}
+                          firebaseAuth={firebaseAuth}
+                          takePhotoSilently={this.handleTakePhotoSilently}
+                        />
+                      )}
+                    />
+                    <Route
+                      path="/dashboard"
+                      render={(props) => (
+                        <Dashboard
+                          {...props}
+                          appAuth={auth}
+                          firebaseAuth={firebaseAuth}
+                        />
+                      )}
+                    />
+                    <Route
+                      exact
+                      path="/"
+                      render={(props) => (
+                        <Verification
+                          {...props}
+                          appAuth={auth}
+                          firebaseAuth={firebaseAuth}
+                        />
+                      )}
+                    />
+                  </Switch>
+                </Suspense>
+              </LazyComponentErrorBoundary>
+            )}
+          </Container>
         </main>
-        <AppLogoutConfirmation
-          open={shouldOpenLogoutConfirmation}
-          title={logoutConfirmation.title}
-          message={logoutConfirmation.message}
-          handleRequestClose={this.handleConfirmClose}
-          handleConfirmationNo={this.handleConfirmationNo}
-          handleConfirmationYes={this.handleConfirmationYes}
+        <LogoutConfirmation
+          open={isConfirmOpen}
+          title="Logout"
+          message={confirmMessage}
+          handleConfirmationNo={this.handleConfirmNo}
+          handleConfirmationYes={this.handleConfirmYes}
         />
       </>
     )
   }
 }
 
-PrivateLayout.propTypes = {
-  classes: PropTypes.instanceOf(Object).isRequired,
-  LoadAssessment: PropTypes.func.isRequired,
+Layout.propTypes = {
+  classes: PropTypes.object.isRequired,
+  theme: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
+  app: PropTypes.object.isRequired,
+  auth: PropTypes.object.isRequired,
+  dashboard: PropTypes.object.isRequired,
+  firebase: PropTypes.object.isRequired,
+  firebaseAuth: PropTypes.object,
+  SendLogActivity: PropTypes.func.isRequired,
   Logout: PropTypes.func.isRequired,
-  app: PropTypes.object,
-  auth: PropTypes.object,
-  dashboard: PropTypes.object,
-  firebaseAuth: PropTypes.object
+  LoadAssessment: PropTypes.func.isRequired
 }
 
 const mapStateToProps = ({ app, auth, dashboard, firebase }) => ({
@@ -165,14 +298,13 @@ const mapStateToProps = ({ app, auth, dashboard, firebase }) => ({
 })
 
 const mapDispatchToProps = (dispatch) => ({
+  SendLogActivity: (payload) => dispatch(SendLogActivityAction(payload)),
   Logout: () => dispatch(LogoutAction()),
   LoadAssessment: () => dispatch(LoadAssessmentAction())
 })
 
-const enhance = compose(
+export default compose(
   withFirebase,
   connect(mapStateToProps, mapDispatchToProps),
-  withStyles(styles)
-)
-
-export default enhance(PrivateLayout)
+  withStyles(styles, { withTheme: true })
+)(Layout)

@@ -14,14 +14,12 @@ import DOM_CONSTANT from '../../constants/dom'
 
 export const Confirmation = (props) => {
   const {
+    fullScreen,
     open,
     title,
     message,
-    dialog = false,
     handleRequestClose,
-    confimationNoText = 'No',
     handleConfirmationNo,
-    confirmationYesText = 'Yes',
     handleConfirmationYes,
     isLoading
   } = props
@@ -31,6 +29,7 @@ export const Confirmation = (props) => {
 
   return (
     <Dialog
+      fullScreen={fullScreen}
       disableBackdropClick
       disableEscapeKeyDown
       open={open}
@@ -42,16 +41,14 @@ export const Confirmation = (props) => {
         {isLoading && <LinearProgress />}
       </DialogContent>
       <DialogActions>
-        {!dialog && (
-          <Button
-            id={confirmationButtonNo}
-            onClick={handleConfirmationNo}
-            color={primary}
-            disabled={isLoading}
-          >
-            {confimationNoText}
-          </Button>
-        )}
+        <Button
+          id={confirmationButtonNo}
+          onClick={handleConfirmationNo}
+          color={primary}
+          disabled={isLoading}
+        >
+          No
+        </Button>
         <Button
           id={confirmationButtonYes}
           onClick={handleConfirmationYes}
@@ -59,7 +56,7 @@ export const Confirmation = (props) => {
           autoFocus
           disabled={isLoading}
         >
-          {confirmationYesText}
+          Yes
         </Button>
       </DialogActions>
     </Dialog>
@@ -67,15 +64,13 @@ export const Confirmation = (props) => {
 }
 
 Confirmation.propTypes = {
-  dialog: PropTypes.bool,
+  fullScreen: PropTypes.bool,
   open: PropTypes.bool,
   title: PropTypes.string,
   message: PropTypes.string,
   isLoading: PropTypes.bool,
   handleRequestClose: PropTypes.func,
-  confimationNoText: PropTypes.string,
   handleConfirmationNo: PropTypes.func,
-  confirmationYesText: PropTypes.string,
   handleConfirmationYes: PropTypes.func
 }
 

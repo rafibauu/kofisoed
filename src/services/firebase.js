@@ -1,5 +1,20 @@
 import { getFirebase } from 'react-redux-firebase'
 
+export const getEmailMethod = async (email) => {
+  const firebaseAuth = getFirebase().auth()
+  const method = await firebaseAuth.fetchSignInMethodsForEmail(email)
+  return method
+}
+
+export const createUser = async (credential, profile) => {
+  const firebaseAuth = getFirebase().auth()
+  const create = await firebaseAuth.createUser(
+    { ...credential, signIn: false },
+    { ...profile }
+  )
+  return create
+}
+
 export const convertGSToUrl = async (gs) => {
   const firebase = getFirebase()
   const storage = firebase.storage()
@@ -24,6 +39,18 @@ export const multiUpdate = async (value) => {
 export const getValue = async (path) => {
   const firebase = getFirebase()
   const deviceRef = firebase.ref(path)
+  const snapshot = await deviceRef.once('value')
+  return snapshot.val()
+}
+
+export const getValueWhere = async (params) => {
+  const { path, key, value, limit = null } = params
+  const firebase = getFirebase()
+  const deviceRef = firebase
+    .ref(path)
+    .orderByChild(key)
+    .equalTo(value)
+    .limitToFirst(limit)
   const snapshot = await deviceRef.once('value')
   return snapshot.val()
 }

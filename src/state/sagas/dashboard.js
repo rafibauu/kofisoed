@@ -1,116 +1,282 @@
-import { all, call, fork, put, select, takeEvery } from 'redux-saga/effects'
-import moment from 'moment'
+import {
+  all,
+  call,
+  delay,
+  fork,
+  put,
+  race,
+  select,
+  takeEvery
+} from 'redux-saga/effects'
+import dayjs from 'dayjs'
+import isBetween from 'dayjs/plugin/isBetween'
 
-import { DashboardActiontypes } from '../modules/dashboard'
-import api, { handleError } from '../../services/back-admin'
+import { DashboardActionTypes } from '../modules/dashboard'
 import { getValue, multiUpdate } from '../../services/firebase'
-import { handlePushUserLog } from './app'
-import { getActiveDataByKey, getDateStatus } from '../../utils/helper'
+import functions from '../../services/functions'
+import { handleSendLogActivity } from './app'
 
-export function* handleLoadAssessmentRequest(action) {
-  const nowMilis = Date.now()
-  const { mode } = action.payload
+export function* handleLoadAssessmentRequest() {
   const state = yield select()
-  const { uid } = state.auth.user
-  const isFirstLoad = mode === 'load'
-  const isSyncLoad = mode === 'sync'
-  if (isFirstLoad || isSyncLoad) {
-    try {
-      const assessments = yield call(getValue, `users_data/${uid}`)
-      let activeUsersProject = getActiveDataByKey(['status', 0], assessments)
-      if (!activeUsersProject) {
-        const assessmentKeys = Object.keys(assessments)
-        const lastAssessmentKeys = assessmentKeys[assessmentKeys.length - 1]
-        activeUsersProject = assessments[lastAssessmentKeys]
-      }
-      const { idProject } = activeUsersProject
-      const fetchProject = yield call(getValue, `project/${idProject}`)
-      const startMilis = moment(fetchProject.started_at).format('x')
-      const endMilis = moment(fetchProject.ended_at).format('x')
-      const activeStatus = getDateStatus(nowMilis, startMilis, endMilis)
-      yield put({
-        type: DashboardActiontypes.LOAD_ASSESSMENT_SUCCESS,
-        payload: {
-          project: {
-            id: fetchProject.id,
-            name: fetchProject.name,
-            slug: fetchProject.slug,
-            startDate: fetchProject.started_at,
-            endDate: fetchProject.ended_at,
-            markAsFinished: fetchProject.markAsFinished,
-            status: activeStatus
-          },
-          username: activeUsersProject.userName,
-          status: activeUsersProject.status,
-          usersMapping: activeUsersProject.usersMapping
-        }
-      })
-    } catch (e) {
-      const errorMessage = handleError(e)
-      yield put({
-        type: DashboardActiontypes.LOAD_ASSESSMENT_FAILED,
-        payload: { error: errorMessage }
-      })
+  const { uid, uuid } = state.auth.user
+  try {
+    const details = {
+      hasAssessment: false,
+      corporate: null,
+      project: null
     }
-  } else {
-    // yield put({ type: DashboardActiontypes.LOAD_SUCCESS, payload: { items } })
+
+    const [rawAssessment, rawProject] = yield all([
+      call(getValue, `raw_assessment/${uid}/${uuid}`),
+      call(getValue, `raw_project/${uuid}`)
+    ])
+
+    dayjs.extend(isBetween)
+    const { start_date: startDate, end_date: endDate } = rawProject.data
+    const isNotFinished = rawAssessment.status === 0
+    const isActive = dayjs().isBetween(startDate, endDate, 'second')
+
+    if (isNotFinished && isActive) {
+      details.hasAssessment = true
+      details.corporate = {
+        name: rawProject.corporate,
+        id: rawProject.id_corporate,
+        urlSite: rawProject.url_site
+      }
+      details.project = {
+        items: rawProject.data.test,
+        itemsCount: rawProject.count_test,
+        id: rawProject.id_project,
+        slug: rawProject.slug_project,
+        startDate: rawProject.data.start_date,
+        endDate: rawProject.data.end_date,
+        verification: rawProject.verification
+      }
+    }
+
+    yield put({
+      type: DashboardActionTypes.LOAD_ASSESSMENT_SUCCESS,
+      payload: { ...details }
+    })
+  } catch (e) {
+    yield put({
+      type: DashboardActionTypes.LOAD_ASSESSMENT_FAILED,
+      payload: { error: 'Kesalahan dalam memuat assessment.' }
+    })
   }
 }
 
 export function* watchLoadAssessmentRequest() {
   yield takeEvery(
-    DashboardActiontypes.LOAD_ASSESSMENT_REQUEST,
+    DashboardActionTypes.LOAD_ASSESSMENT_REQUEST,
     handleLoadAssessmentRequest
   )
 }
 
-export function* handleSendAssessmentRequest(action) {
-  const { data, callback } = action.payload
-  const { uid, tid, rawProject, rawStatus, rawAssessment } = data
-  const projectIndex = rawProject.activeIndex
-  const update = {
-    [`raw_project/${uid}/data/test/${projectIndex}/status`]: 1,
-    [`raw_status/${uid}/${tid}`]: rawStatus
-  }
-  if (rawAssessment) {
-    update[`raw_assessment/${uid}/`] = rawAssessment
-  }
+export function* handleInstructionLoadRequest(action) {
+  const { title } = action.payload
   try {
-    yield call(api.post, `save-raw-input`, rawStatus.data)
-    yield call(multiUpdate, update)
-    yield call(handlePushUserLog, 'direct', {
-      type: 'activity',
-      date: Date.now(),
-      log: `berhasil memperbaharui raw status dan raw assessment subtest ${rawStatus.title}`
+    const { instruction } = yield race({
+      // instruction: call(api.get, `instruction?file=${backAdminParam}`),
+      timeout: delay(30000)
     })
-    yield call(callback.success)
-    yield put({ type: DashboardActiontypes.SEND_RAW_INPUT_SUCCESS })
+
+    if (instruction) {
+      yield call(handleSendLogActivity, {
+        payload: {
+          mode: 'indirect',
+          data: {
+            type: 'activity',
+            date: Date.now(),
+            log: `berhasil memuat instruksi soal subtest ${title}`
+          }
+        }
+      })
+      yield put({
+        type: DashboardActionTypes.INSTRUCTION_LOAD_SUCCESS,
+        payload: { instruction: instruction.data }
+      })
+    } else {
+      yield call(handleSendLogActivity, {
+        payload: {
+          mode: 'indirect',
+          data: {
+            type: 'error',
+            date: Date.now(),
+            log: `gagal memuat instruksi soal subtest ${title} : Timeout 30 detik`
+          }
+        }
+      })
+      yield put({
+        type: DashboardActionTypes.INSTRUCTION_LOAD_FAILURE,
+        payload: { error: `Tidak bisa memuat data : Timeout 30 detik` }
+      })
+    }
   } catch (e) {
-    const errorMessage = handleError(e)
-    yield call(handlePushUserLog, 'direct', {
-      type: 'error',
-      date: Date.now(),
-      log: `gagal memperbaharui raw status dan
-        raw assessment subtest ${rawStatus.title}`
+    // const errorMessage = handleError(e)
+    const errorMessage = 'error'
+    yield call(handleSendLogActivity, {
+      payload: {
+        mode: 'indirect',
+        data: {
+          type: 'error',
+          date: Date.now(),
+          log: `gagal memuat instruksi soal subtest ${title} : ${errorMessage}`
+        }
+      }
     })
-    yield call(callback.failed)
     yield put({
-      type: DashboardActiontypes.SEND_RAW_INPUT_FAILURE,
-      payload: { error: `Tidak bisa mengirim data: ${errorMessage}` }
+      type: DashboardActionTypes.INSTRUCTION_LOAD_FAILURE,
+      payload: { error: `Tidak bisa memuat data : ${errorMessage}` }
     })
   }
 }
 
-export function* watchSendAssessmentRequest() {
+export function* watchInstructionLoadRequest() {
   yield takeEvery(
-    DashboardActiontypes.SEND_ASSESSMENT_REQUEST,
-    handleSendAssessmentRequest
+    DashboardActionTypes.INSTRUCTION_LOAD_REQUEST,
+    handleInstructionLoadRequest
+  )
+}
+
+export function* handleSimulationLoadRequest(action) {
+  const { slug, testId } = action.payload
+  const state = yield select()
+  const {
+    simulation: currentSimulation,
+    testId: currentTestId
+  } = state.dashboard
+  const keys = Object.keys(currentSimulation)
+  if (keys.length === 0 || currentTestId !== testId) {
+    try {
+      const { simulation } = yield race({
+        // simulation: call(api.get, `simulation?subtest=${slug}`),
+        timeout: delay(30000)
+      })
+
+      if (simulation) {
+        yield call(handleSendLogActivity, {
+          payload: {
+            mode: 'indirect',
+            data: {
+              type: 'activity',
+              date: Date.now(),
+              log: `berhasil memuat simulasi soal subtest ${slug}`
+            }
+          }
+        })
+        yield put({
+          type: DashboardActionTypes.SIMULATION_LOAD_SUCCESS,
+          payload: { simulation: simulation.data }
+        })
+      } else {
+        yield call(handleSendLogActivity, {
+          payload: {
+            mode: 'indirect',
+            data: {
+              type: 'error',
+              date: Date.now(),
+              log: `gagal memuat simulasi soal subtest ${slug} : Timeout 30 detik`
+            }
+          }
+        })
+        yield put({
+          type: DashboardActionTypes.SIMULATION_LOAD_FAILURE,
+          payload: { error: 'Timeout 30 detik' }
+        })
+      }
+    } catch (e) {
+      // const errorMessage = handleError(e)
+      const errorMessage = 'error'
+      yield call(handleSendLogActivity, {
+        payload: {
+          mode: 'indirect',
+          data: {
+            type: 'error',
+            date: Date.now(),
+            log: `gagal memuat simulasi soal subtest ${slug} : ${errorMessage}`
+          }
+        }
+      })
+      yield put({
+        type: DashboardActionTypes.SIMULATION_LOAD_FAILURE,
+        payload: { error: `Tidak bisa memuat data : ${errorMessage}` }
+      })
+    }
+  } else {
+    yield put({
+      type: DashboardActionTypes.SIMULATION_LOAD_SUCCESS,
+      payload: { simulation: currentSimulation }
+    })
+  }
+}
+
+export function* watchSimulationLoadRequest() {
+  yield takeEvery(
+    DashboardActionTypes.SIMULATION_LOAD_REQUEST,
+    handleSimulationLoadRequest
+  )
+}
+
+export function* handleSendRawInputRequest(action) {
+  const { data, callback } = action.payload
+  const { uid, uuid, tid, rawProject, rawStatus, rawAssessment } = data
+  const projectIndex = rawProject.activeIndex
+  const update = {
+    [`raw_project/${uuid}/data/test/${projectIndex}/status`]: 1,
+    [`raw_status/${uuid}/${tid}`]: rawStatus
+  }
+  if (rawAssessment) {
+    update[`raw_assessment/${uid}/${uuid}`] = rawAssessment
+  }
+  try {
+    yield call(functions.post, `queue/create`, { data: rawStatus.data })
+    yield call(multiUpdate, update)
+    yield call(handleSendLogActivity, {
+      payload: {
+        mode: 'indirect',
+        data: {
+          type: 'activity',
+          date: Date.now(),
+          log: `meyelesaikan test dan memperbaharui raw status / assessment subtest ${rawStatus.title}`
+        }
+      }
+    })
+    yield call(callback.success)
+    yield put({ type: DashboardActionTypes.SEND_RAW_INPUT_SUCCESS })
+  } catch (e) {
+    // const errorMessage = handleError(e)
+    const errorMessage = 'error'
+    yield call(handleSendLogActivity, {
+      payload: {
+        mode: 'indirect',
+        data: {
+          type: 'error',
+          date: Date.now(),
+          log: `gagal memperbaharui raw status dan raw assessment subtest ${rawStatus.title}`
+        }
+      }
+    })
+    yield call(callback.failed, errorMessage)
+    yield put({
+      type: DashboardActionTypes.SEND_RAW_INPUT_FAILED,
+      payload: { error: `Tidak bisa mengirim data: ${e}` }
+    })
+  }
+}
+
+export function* watchSendRawInputRequest() {
+  yield takeEvery(
+    DashboardActionTypes.SEND_RAW_INPUT_REQUEST,
+    handleSendRawInputRequest
   )
 }
 
 export default function* rootSaga() {
   yield all([
     fork(watchLoadAssessmentRequest),
-    fork(watchSendAssessmentRequest)
+    fork(watchInstructionLoadRequest),
+    fork(watchSimulationLoadRequest),
+    fork(watchSendRawInputRequest)
   ])
 }

@@ -1,17 +1,9 @@
-const login = '/login'
-const loginToken = '/login/login-token'
-const verification = '/'
-const dashboard = '/dashboard'
-const instruction = '/instruction/:slug'
-const assessment = '/assessment/:slug'
-const notFound = '/not-found'
+export const login = '/login'
+export const loginToken = '/login/login-token'
+export const verification = '/'
+export const dashboard = '/dashboard'
+export const instruction = '/instruction/:slug'
+export const assessment = '/assessment/:slug'
+export const notFound = '/not-found'
 
-export default {
-  login,
-  loginToken,
-  verification,
-  dashboard,
-  instruction,
-  assessment,
-  notFound
-}
+export default true

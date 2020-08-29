@@ -1,65 +1,41 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import { Redirect } from 'react-router-dom'
+import { compose } from 'redux'
 import { connect } from 'react-redux'
-import { Container, Paper } from '@material-ui/core/'
-import withStyles from '@material-ui/core/styles/withStyles'
-import styles from './styles'
+import Container from '@material-ui/core/Container'
+import Paper from '@material-ui/core/Paper'
+import { withStyles } from '@material-ui/core/styles'
+import styles from './styles/index'
 
 import { Login as LoginAction } from '../../state/modules/auth'
-import LoginForm from './form'
+import LoginForm from './components/form'
 
-class LoginPage extends React.Component {
-  state = {
-    shouldRedirect: false
+const LoginPage = (props) => {
+  const { classes, app, auth, Login } = props
+
+  if (auth.isLoggedIn) {
+    return <Redirect to="/" />
   }
 
-  static getDerivedStateFromProps({ auth, location }) {
-    if (auth.isLoggedIn)
-      return {
-        shouldRedirect: true,
-        redirectTo:
-          location.state && location.state.from
-            ? location.state.from.pathname
-            : '/'
-      }
-
-    return { shouldRedirect: false }
-  }
-
-  render() {
-    const { classes, auth, Login } = this.props
-    const { shouldRedirect, redirectTo } = this.state
-
-    if (shouldRedirect) {
-      return <Redirect to={redirectTo} />
-    }
-
-    return (
-      <div className={classes.loginContainer}>
-        <Container maxWidth="xs">
-          <Paper variant="outlined" className={classes.loginWrapper}>
-            <LoginForm auth={auth} Login={Login} />
-          </Paper>
-        </Container>
-      </div>
-    )
-  }
+  return (
+    <div className={classes.loginContainer}>
+      <Container maxWidth="xs">
+        <Paper variant="outlined" classes={{ root: classes.loginWrapper }}>
+          <LoginForm app={app} auth={auth} Login={Login} />
+        </Paper>
+      </Container>
+    </div>
+  )
 }
 
-LoginPage.propTypes = {
-  classes: PropTypes.instanceOf(Object).isRequired,
-  auth: PropTypes.instanceOf(Object).isRequired,
-  location: PropTypes.instanceOf(Object).isRequired,
-  Login: PropTypes.func
-}
-
-const styledComponent = withStyles(styles)(LoginPage)
-
-const mapStateToProps = ({ auth }) => ({ auth })
-
+const mapStateToProps = ({ app, auth }) => ({ app, auth })
 const mapDispatchToProps = (dispatch) => ({
-  Login: (payload) => dispatch(LoginAction(payload))
+  Login: (credential) => dispatch(LoginAction(credential))
 })
 
-export default connect(mapStateToProps, mapDispatchToProps)(styledComponent)
+const enhance = compose(
+  connect(mapStateToProps, mapDispatchToProps),
+  withStyles(styles)
+)
+
+export default enhance(LoginPage)

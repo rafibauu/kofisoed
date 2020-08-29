@@ -1,74 +1,75 @@
-export const DashboardActiontypes = {
+export const DashboardActionTypes = {
   LOAD_ASSESSMENT_REQUEST: 'talentlytica/dashboard/LOAD_ASSESSMENT_REQUEST',
   LOAD_ASSESSMENT_SUCCESS: 'talentlytica/dashboard/LOAD_ASSESSMENT_SUCCESS',
-  LOAD_ASSESSMENT_EMPTY: 'talentlytica/dashboard/LOAD_ASSESSMENT_EMPTY',
+  LOAD_ASSESSMENT_SUCCESS_EMPTY:
+    'talentlytica/dashboard/LOAD_ASSESSMENT_SUCCESS_EMPTY',
   LOAD_ASSESSMENT_FAILED: 'talentlytica/dashboard/LOAD_ASSESSMENT_FAILED',
-  SEND_ASSESSMENT_REQUEST: 'talentlytica/dashboard/SEND_ASSESSMENT_REQUEST',
-  SEND_ASSESSMENT_SUCCESS: 'talentlytica/dashboard/SEND_ASSESSMENT_SUCCESS',
-  SEND_ASSESSMENT_FAILED: 'talentlytica/dashboard/SEND_ASSESSMENT_FAILED'
+  INSTRUCTION_LOAD_REQUEST: 'talentlytica/dashboard/INSTRUCTION_LOAD_REQUEST',
+  INSTRUCTION_LOAD_SUCCESS: 'talentlytica/dashboard/INSTRUCTION_LOAD_SUCCESS',
+  INSTRUCTION_LOAD_FAILED: 'talentlytica/dashboard/INSTRUCTION_LOAD_FAILED',
+  SIMULATION_LOAD_REQUEST: 'talentlytica/dashboard/SIMULATION_LOAD_REQUEST',
+  SIMULATION_LOAD_SUCCESS: 'talentlytica/dashboard/SIMULATION_LOAD_SUCCESS',
+  SIMULATION_LOAD_FAILED: 'talentlytica/dashboard/SIMULATION_LOAD_FAILED',
+  SEND_RAW_INPUT_REQUEST: 'talentlytica/dashboard/SEND_RAW_INPUT_REQUEST',
+  SEND_RAW_INPUT_SUCCESS: 'talentlytica/dashboard/SEND_RAW_INPUT_SUCCESS',
+  SEND_RAW_INPUT_FAILED: 'talentlytica/dashboard/SEND_RAW_INPUT_FAILED'
 }
 
-export const LoadAssessment = (mode = 'load') => ({
-  type: DashboardActiontypes.LOAD_ASSESSMENT_REQUEST,
-  payload: { mode }
+export const LoadAssessment = () => ({
+  type: DashboardActionTypes.LOAD_ASSESSMENT_REQUEST
 })
 
-export const SendAssessment = (data, callback) => ({
-  type: DashboardActiontypes.SEND_ASSESSMENT_REQUEST,
+export const SendRawInput = (data, callback) => ({
+  type: DashboardActionTypes.SEND_RAW_INPUT_REQUEST,
   payload: { data, callback }
 })
 
-export const DashboardInitialState = {
+export const initialState = {
   isLoading: false,
   isSending: false,
-  corporate: '',
-  project: {},
-  username: '',
-  usersMapping: {},
-  status: 0,
+  hasAssessment: false,
+  corporate: null,
+  project: null,
   error: ''
 }
 
-export default (state = DashboardInitialState, action) => {
+export default (state = initialState, action) => {
   switch (action.type) {
-    case DashboardActiontypes.LOAD_ASSESSMENT_REQUEST:
+    case DashboardActionTypes.LOAD_ASSESSMENT_REQUEST:
       return { ...state, isLoading: true }
-    case DashboardActiontypes.LOAD_ASSESSMENT_SUCCESS: {
-      const { project, username, usersMapping, status } = action.payload
+    case DashboardActionTypes.LOAD_ASSESSMENT_SUCCESS:
       return {
         ...state,
         isLoading: false,
-        project,
-        username,
-        usersMapping,
-        status
+        hasAssessment: action.payload.hasAssessment,
+        corporate: action.payload.corporate,
+        project: action.payload.project
       }
-    }
-    case DashboardActiontypes.LOAD_ASSESSMENT_EMPTY:
-    case DashboardActiontypes.LOAD_ASSESSMENT_FAILED:
+    case DashboardActionTypes.LOAD_ASSESSMENT_FAILED:
       return {
-        ...DashboardInitialState,
+        ...state,
+        isLoading: false,
         error: action.payload.error
       }
-    case DashboardActiontypes.SEND_ASSESSMENT_REQUEST:
+    case DashboardActionTypes.SEND_RAW_INPUT_REQUEST:
       return {
         ...state,
         isSending: true
       }
-    case DashboardActiontypes.SEND_ASSESSMENT_SUCCESS:
+    case DashboardActionTypes.SEND_RAW_INPUT_SUCCESS:
       return {
         ...state,
         isSending: false
       }
-    case DashboardActiontypes.SEND_ASSESSMENT_FAILED:
+    case DashboardActionTypes.SEND_RAW_INPUT_FAILURE:
       return {
         ...state,
-        isSending: false,
-        error: action.payload.error
+        isSending: false
       }
+    case DashboardActionTypes.LOAD_SUCCESS_EMPTY:
     case 'CHANGE_AUTH':
     case 'RESET':
-      return DashboardInitialState
+      return initialState
     default:
       return state
   }

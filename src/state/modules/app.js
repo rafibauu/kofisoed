@@ -1,7 +1,7 @@
-export const AppActionTypes = {
+export const types = {
   SHOW_SNACKBAR: 'talentlytica/app/SHOW_SNACKBAR',
   HIDE_SNACKBAR: 'talentlytica/app/HIDE_SNACKBAR',
-  PUSH_USER_LOG: 'talentlytica/app/PUSH_USER_LOG',
+  SEND_LOG_ACTIVITY: 'talentlytica/app/SEND_LOG_ACTIVITY',
   SET_USER_DEVICE_REQUEST: 'talentlytica/app/SET_USER_DEVICE_REQUEST',
   SET_USER_DEVICE_SUCCESS: 'talentlytica/app/SET_USER_DEVICE_SUCCESS',
   SET_USER_DEVICE_FAILED: 'talentlytica/app/SET_USER_DEVICE_FAILED',
@@ -10,61 +10,54 @@ export const AppActionTypes = {
   SET_USER_DEVICE_FINISHED: 'talentlytica/app/SET_USER_DEVICE_FINISHED'
 }
 
-export const ShowSnackbar = (message, shouldRedirectToHome = false) => ({
-  type: AppActionTypes.SHOW_SNACKBAR,
-  payload: {
-    snackbarMessage: message,
-    shouldRedirectToHome
-  }
-})
-
-export const HideSnackbar = () => ({
-  type: AppActionTypes.HIDE_SNACKBAR
-})
-
 export const SetUserDevice = () => ({
-  type: AppActionTypes.SET_USER_DEVICE_REQUEST
+  type: types.SET_USER_DEVICE_REQUEST
 })
 
-export const CallLogActivity = (data) => ({
-  type: AppActionTypes.PUSH_USER_LOG,
+export const ShowSnackbar = (payload) => ({
+  type: types.SHOW_SNACKBAR,
+  payload
+})
+
+export const HideSnackbar = (payload) => ({
+  type: types.HIDE_SNACKBAR,
+  payload
+})
+
+export const SendLogActivity = (data) => ({
+  type: types.SEND_LOG_ACTIVITY,
   payload: data
 })
 
-export const Reset = () => ({
-  type: 'RESET'
-})
-
-export const AppInitialState = {
+export const initialState = {
   snackbarMessage: null,
   isLoading: false,
+  isSyncing: false,
   shouldRedirectToHome: false,
   device: {},
   clientUniqueId: ''
 }
 
-export default (state = AppInitialState, action) => {
+export default (state = initialState, action) => {
   switch (action.type) {
-    case AppActionTypes.SHOW_SNACKBAR: {
-      const { snackbarMessage, shouldRedirectToHome } = action.payload
+    case types.SHOW_SNACKBAR:
       return {
         ...state,
-        snackbarMessage,
-        shouldRedirectToHome:
-          shouldRedirectToHome || AppInitialState.shouldRedirectToHome
+        snackbarMessage: action.payload.message,
+        shouldRedirectToHome: action.payload.shouldRedirectToHome || false
       }
-    }
-    case AppActionTypes.HIDE_SNACKBAR:
+    case types.HIDE_SNACKBAR:
       return { ...state, snackbarMessage: null, shouldRedirectToHome: false }
-    case AppActionTypes.SET_USER_DEVICE_REQUEST:
+    case types.SET_USER_DEVICE_REQUEST:
       return { ...state, isLoading: true }
-    case AppActionTypes.SET_USER_DEVICE_SUCCESS:
+    case types.SET_USER_DEVICE_SUCCESS:
       return {
         ...state,
+        isLoading: false,
         device: action.payload.device,
         clientUniqueId: action.payload.clientUniqueId
       }
-    case AppActionTypes.SET_USER_DEVICE_FINISHED:
+    case types.SET_USER_DEVICE_FINISHED:
       return {
         ...state,
         isLoading: false,
@@ -73,8 +66,7 @@ export default (state = AppInitialState, action) => {
     case 'CHANGE_AUTH':
     case 'RESET':
       return {
-        ...AppInitialState,
-        device: state.device,
+        ...initialState,
         clientUniqueId: state.clientUniqueId
       }
     default:

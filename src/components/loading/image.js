@@ -1,28 +1,30 @@
 import React from 'react'
-import PropTypes from 'prop-types'
-import ContentLoader from 'react-content-loader'
 
-const ImageLoader = ({ width, height, marginBottom }) => (
-  <div
-    id="content-loader-div"
-    style={{ width, height, margin: 'auto', marginBottom }}
-  >
-    <ContentLoader
-      height={height}
-      width={width}
-      speed={2}
-      primarycolor="#f3f3f3"
-      secondarycolor="#ecebeb"
+import { LinearProgress, Typography } from '@material-ui/core'
+
+const ImagesLoading = () => {
+  return (
+    <div
+      style={{
+        textAlign: 'center',
+        margin: 'auto',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: 300,
+        height: 70
+      }}
     >
-      <rect x="4.28" y="11.67" rx="0" ry="0" width={width} height={height} />
-    </ContentLoader>
-  </div>
-)
-
-ImageLoader.propTypes = {
-  width: PropTypes.number,
-  height: PropTypes.number,
-  marginBottom: PropTypes.any
+      <LinearProgress
+        color="primary"
+        style={{ width: 160, margin: '10px auto 0px' }}
+      />
+      <Typography style={{ marginTop: 5 }}>Loading Images...</Typography>
+      <Typography>Please wait, it will take a few seconds...</Typography>
+    </div>
+  )
 }
 
-export default ImageLoader
+export default ImagesLoading

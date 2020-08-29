@@ -34,7 +34,7 @@ const Client = (WrappedComponent) => {
 
   Component.propTypes = {
     app: PropTypes.object,
-    firebaseConnected: PropTypes.any
+    firebaseConnected: PropTypes.bool
   }
 
   return Component

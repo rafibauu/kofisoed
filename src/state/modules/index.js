@@ -5,7 +5,9 @@ import localForage from 'localforage'
 
 import auth from './auth'
 import app from './app'
-import dashboard from './dashboard'
+// import dashboard from './dashboard'
+// import images from './images'
+import skills from './skills'
 
 const config = {
   timeout: 10000,
@@ -27,7 +29,7 @@ const config = {
 const rootReducer = combineReducers({
   app: persistReducer({ ...config, key: 'app' }, app),
   auth: persistReducer({ ...config, key: 'auth' }, auth),
-  dashboard,
+  skills,
   firebase: firebaseReducer
 })
 
