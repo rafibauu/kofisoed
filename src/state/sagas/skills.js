@@ -1,11 +1,24 @@
 import { all, call, fork, put, takeEvery } from 'redux-saga/effects'
-import { getValue } from '../../services/firebase'
+import { getValueWhere, getValueBetween } from '../../services/firebase'
 import { SkillsActionTypes } from '../modules/skills'
 
 export function* handleLoadSkillsRequest(action) {
-  const { page, categories } = action.payload
+  const { category } = action.payload
   try {
-    const data = yield call(getValue, '/skills')
+    let data
+    if (category === 'all') {
+      data = yield call(getValueWhere, {
+        path: 'skills',
+        key: 'timestamp'
+      })
+    } else {
+      data = yield call(getValueBetween, {
+        path: 'skills',
+        key: 'category',
+        value: 'cerita-alumni',
+        start: 1
+      })
+    }
     yield put({
       type: SkillsActionTypes.LOAD_SKILLS_SUCCEED,
       payload: { data }

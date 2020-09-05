@@ -1,19 +1,20 @@
-const CLIENT_NAME = 'Fisika Unsoed'
-const CLIENT_LOGO = require('./images/company-logo.png')
-const CLIENT_FAVICON = require('./images/company-favicon.png')
+/* eslint-disable global-require */
+export const CLIENT_NAME = 'Fisika Unsoed'
+export const CLIENT_LOGO = require('./images/company-logo.png')
+export const CLIENT_FAVICON = require('./images/company-favicon.png')
 
-const APP_VERSION = '3.11.0'
-const APP_NAME = 'Fission Platform'
-const APP_COLOR = {
-  primary: '#000000',
-  secondary: '#222222',
+export const APP_VERSION = '3.11.0'
+export const APP_NAME = 'Fission Platform'
+export const APP_COLOR = {
+  primary: '#e8505b',
+  secondary: '#263238',
   backgroud: '#FFFFFF'
 }
-const APP_API_URL = 'https://staging.talentlytic.com/api/'
-const APP_FUNCTIONS_URL =
+export const APP_API_URL = 'https://staging.talentlytic.com/api/'
+export const APP_FUNCTIONS_URL =
   'https://us-central1-pegasus-ad8a3.cloudfunctions.net/api/v1/'
-const APP_SESSION_EXPIRED_TIME = 7200
-const CONFIG_FIREBASE = {
+export const APP_SESSION_EXPIRED_TIME = 7200
+export const CONFIG_FIREBASE = {
   apiKey: 'AIzaSyAhI0Ngmr7KaDB0bxvRiJs_6kxWDyW6JmA',
   authDomain: 'jufisoed-platform.firebaseapp.com',
   databaseURL: 'https://jufisoed-platform.firebaseio.com',
@@ -22,11 +23,12 @@ const CONFIG_FIREBASE = {
   messagingSenderId: '889861448361',
   appId: '1:889861448361:web:3c4e10be3275c7791f3fb8'
 }
-const CONFIG_RRFIREBASE = {
+export const CONFIG_RRFIREBASE = {
   userProfile: 'users',
   attachAuthIsReady: true,
   enableLogging: false,
-  updateProfileOnLogin: false
+  updateProfileOnLogin: false,
+  useFirestoreForProfile: true
 }
 
 export default {

@@ -1,36 +1,33 @@
 import { createStore, applyMiddleware, compose } from 'redux'
-import { reactReduxFirebase } from 'react-redux-firebase'
 import { persistStore } from 'redux-persist'
 import createSagaMiddleware from 'redux-saga'
+import { createFirebaseInstance } from 'react-redux-firebase'
+// import { createFirestoreInstance } from 'redux-firestore'
 import firebase from 'firebase/app'
 import 'firebase/auth'
 import 'firebase/database'
+import 'firebase/firestore'
 import 'firebase/storage'
-// import { logger } from 'redux-logger'
+import { logger } from 'redux-logger'
 
 import RootSaga from '../sagas'
-import ENV from '../../env'
+import { CONFIG_FIREBASE, CONFIG_RRFIREBASE } from '../../env'
 import RootReducer from '../modules'
 
-firebase.initializeApp(ENV.CONFIG_FIREBASE)
+firebase.initializeApp(CONFIG_FIREBASE)
+firebase.firestore()
+
+createFirebaseInstance(firebase, CONFIG_RRFIREBASE)
 
 const configureSagaMiddleware = createSagaMiddleware()
 const middlewares = [configureSagaMiddleware]
-// if (process.env.NODE_ENV === `development`) {
-//   middlewares.push(logger)
-// }
-
-// const configureStore = compose(
-//   reactReduxFirebase(firebase, ENV.CONFIG_RRFIREBASE),
-//   applyMiddleware(...middlewares)
-// )(createStore)(RootReducer)
+if (process.env.NODE_ENV === `development`) {
+  middlewares.push(logger)
+}
 
 const configureStore = createStore(
   RootReducer,
-  compose(
-    reactReduxFirebase(firebase, ENV.CONFIG_RRFIREBASE),
-    applyMiddleware(...middlewares)
-  )
+  compose(applyMiddleware(...middlewares))
 )
 
 const configurePersistor = persistStore(configureStore)

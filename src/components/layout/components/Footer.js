@@ -102,7 +102,7 @@ const Footer = () => {
       <Grid container style={{ backgroundColor: '#dadada', padding: '20px 0' }}>
         <Container maxWidth="lg" style={{ display: 'flex' }}>
           <Typography style={{ fontSize: 14, color: '#585858' }}>
-            {`Copyright © ${year} - Fussion Platform. All rights reserved.`}
+            {`Copyright © ${year} - Fission Platform. All rights reserved.`}
           </Typography>
         </Container>
       </Grid>

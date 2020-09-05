@@ -8,7 +8,7 @@ import Typography from '@material-ui/core/Typography'
 import { withStyles } from '@material-ui/core/styles'
 import styles from '../styles/index'
 
-import ENV from '../../../env'
+// import ENV from '../../../env'
 
 const GuestTopbar = (props) => {
   const { classes } = props
@@ -16,7 +16,8 @@ const GuestTopbar = (props) => {
     <AppBar
       style={{
         backgroundColor: '#FFF',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.04)'
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.04)',
+        borderBottom: '1px solid rgb(0 0 0 / 0.05)'
       }}
     >
       <Container maxWidth="lg">
@@ -42,15 +43,15 @@ const GuestTopbar = (props) => {
                 </Link>
               </li>
               <li className={classes.itemMenuNavigation}>
-                <Link to="/jobs" className={classes.itemLinkNavigation}>
-                  Job
+                <Link to="/career" className={classes.itemLinkNavigation}>
+                  Career
                 </Link>
               </li>
-              <li className={classes.itemMenuNavigation}>
+              {/* <li className={classes.itemMenuNavigation}>
                 <Link to="/marketplace" className={classes.itemLinkNavigation}>
                   Marketplace
                 </Link>
-              </li>
+              </li> */}
               <li className={classes.itemMenuNavigation}>
                 <Link to="/about" className={classes.itemLinkNavigation}>
                   About

@@ -3,18 +3,24 @@ import Img from 'react-image'
 import Container from '@material-ui/core/Container'
 import Grid from '@material-ui/core/Grid'
 import Typography from '@material-ui/core/Typography'
+
 import LandingIllustrarion from './images/home-1.svg'
 
 const SkillsComponent = React.lazy(() => import('./components/skills'))
+const JobsComponent = React.lazy(() => import('./components/career'))
+const AdsSelfAssessment = React.lazy(() =>
+  import('./components/AdsSelfAssessment')
+)
+const AdsRegistration = React.lazy(() => import('./components/AdsRegistration'))
 
-const ContainerStyle = { padding: '25px 0' }
+const ContainerStyle = { paddingTop: 25, paddingBottom: 25 }
 
 const Home = () => {
   return (
     <>
       <Grid container>
-        <Container maxWidth="md" style={ContainerStyle}>
-          <Grid container alignItems="center">
+        <Container maxWidth="lg" style={ContainerStyle}>
+          <Grid container item xs={12} alignItems="center">
             <Grid container item xs={6}>
               <Typography variant="h5">About Us</Typography>
               <Typography>
@@ -36,13 +42,20 @@ const Home = () => {
       </Grid>
       <Grid container>
         <Container maxWidth="lg" style={ContainerStyle}>
-          <Grid container item xs={12}>
-            <React.Suspense fallback={<div>Loading...</div>}>
-              <SkillsComponent />
-            </React.Suspense>
-          </Grid>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <SkillsComponent />
+          </React.Suspense>
         </Container>
       </Grid>
+      <AdsSelfAssessment />
+      <Grid container>
+        <Container maxWidth="lg" style={ContainerStyle}>
+          <React.Suspense fallback={<div>Loading...</div>}>
+            <JobsComponent />
+          </React.Suspense>
+        </Container>
+      </Grid>
+      <AdsRegistration />
     </>
   )
 }

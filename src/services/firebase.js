@@ -44,13 +44,22 @@ export const getValue = async (path) => {
 }
 
 export const getValueWhere = async (params) => {
-  const { path, key, value, limit = null } = params
+  const { path, key, limit = 10 } = params
+  const firebase = getFirebase()
+  const deviceRef = firebase.ref(path).orderByChild(key).limitToLast(limit)
+  const snapshot = await deviceRef.once('value')
+  return snapshot.val()
+}
+
+export const getValueBetween = async (params) => {
+  const { path, key, start, limit = 2 } = params
   const firebase = getFirebase()
   const deviceRef = firebase
     .ref(path)
     .orderByChild(key)
-    .equalTo(value)
-    .limitToFirst(limit)
+    // .equalTo(value)
+    .startAt(start)
+    .limitToLast(limit)
   const snapshot = await deviceRef.once('value')
   return snapshot.val()
 }

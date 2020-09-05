@@ -1,6 +1,7 @@
 import { combineReducers } from 'redux'
 import { persistReducer } from 'redux-persist'
 import { firebaseReducer } from 'react-redux-firebase'
+import { firestoreReducer } from 'redux-firestore'
 import localForage from 'localforage'
 
 import auth from './auth'
@@ -30,7 +31,8 @@ const rootReducer = combineReducers({
   app: persistReducer({ ...config, key: 'app' }, app),
   auth: persistReducer({ ...config, key: 'auth' }, auth),
   skills,
-  firebase: firebaseReducer
+  firebase: firebaseReducer,
+  firestore: firestoreReducer
 })
 
 export default rootReducer

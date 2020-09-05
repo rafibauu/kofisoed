@@ -16,32 +16,56 @@ import List from './components/list'
 
 const Skills = (props) => {
   const { skills, LoadSkills } = props
-  const [categories] = React.useState('all')
+  const [category, setCategory] = React.useState('all')
   const [page, setPage] = React.useState(0)
   const [sortBy, setSortBy] = React.useState('waktu')
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage)
-    LoadSkills({ page: newPage, categories })
+    LoadSkills({ page: newPage, category })
   }
 
   React.useEffect(() => {
-    LoadSkills({ page, categories })
-  }, [LoadSkills])
+    LoadSkills({ page, category })
+  }, [page, category, LoadSkills])
 
   const { isLoading, data } = skills
 
   return (
     <Container maxWidth="lg">
       <Header />
-      <Grid container alignItems="center" justify="space-between" spacing={2}>
+      <Grid container alignItems="center" justify="space-between">
         <Grid item xs={12} md={9}>
-          <Button variant="outlined" color="primary">
+          <Button
+            variant={category === 'all' ? 'contained' : 'text'}
+            color="primary"
+            onClick={() => setCategory('all')}
+          >
             Semua
           </Button>
-          <Button style={{ margin: '0 5px' }}>Cerita Alumni</Button>
-          <Button style={{ margin: '0 5px' }}>Kenali Diri</Button>
-          <Button>Tutorial</Button>
+          <Button
+            variant={category === 'cerita-alumni' ? 'contained' : 'text'}
+            color="primary"
+            style={{ margin: '0 5px' }}
+            onClick={() => setCategory('cerita-alumni')}
+          >
+            Cerita Alumni
+          </Button>
+          <Button
+            variant={category === 'kenali-diri' ? 'contained' : 'text'}
+            color="primary"
+            style={{ margin: '0 5px' }}
+            onClick={() => setCategory('kenali-diri')}
+          >
+            Kenali Diri
+          </Button>
+          <Button
+            variant={category === 'tutorial' ? 'contained' : 'text'}
+            color="primary"
+            onClick={() => setCategory('tutorial')}
+          >
+            Tutorial
+          </Button>
         </Grid>
         <Grid item xs={12} md={3}>
           <FormControl style={{ width: '100%' }}>

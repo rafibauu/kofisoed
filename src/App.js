@@ -5,7 +5,6 @@ import { CssBaseline, MuiThemeProvider } from '@material-ui/core'
 
 import { HideSnackbar as HideSnackbarAction } from './state/modules/app'
 import GuestLayout from './components/layout/GuestLayout'
-import Login from './pages/auth'
 import NotFound from './pages/404'
 import Maintenance from './pages/maintenance'
 import RootSnackbar from './components/snackbar'
@@ -28,6 +27,24 @@ const App = (props) => {
             />
             <Route
               path="/skills"
+              component={GuestLayout}
+              auth={auth}
+              firebaseAuth={firebaseAuth}
+            />
+            <Route
+              path="/career"
+              component={GuestLayout}
+              auth={auth}
+              firebaseAuth={firebaseAuth}
+            />
+            <Route
+              path="/marketplace"
+              component={GuestLayout}
+              auth={auth}
+              firebaseAuth={firebaseAuth}
+            />
+            <Route
+              path="/about"
               component={GuestLayout}
               auth={auth}
               firebaseAuth={firebaseAuth}
