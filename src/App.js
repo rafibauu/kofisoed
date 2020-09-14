@@ -16,7 +16,7 @@ import Theme from './utils/theme'
 
 const AuthPage = React.lazy(() => import('./pages/auth'))
 const HomePage = React.lazy(() => import('./pages/home'))
-const SharingPage = React.lazy(() => import('./pages/sharing'))
+// const SharingPage = React.lazy(() => import('./pages/sharing'))
 
 const App = (props) => {
   const {
@@ -57,13 +57,13 @@ const App = (props) => {
                       firebaseAuth={firebaseAuth}
                       firebaseProfile={firebaseProfile}
                     />
-                    <Route
+                    {/* <Route
                       path="/sharing"
                       component={SharingPage}
                       auth={auth}
                       firebaseAuth={firebaseAuth}
                       firebaseProfile={firebaseProfile}
-                    />
+                    /> */}
                     {/* <Route
                       path="/career"
                       component={GuestLayout}
