@@ -16,12 +16,13 @@ const Header = () => {
         backgroundColor: '#d5d5d5',
         borderRadius: 10,
         paddingTop: 50,
-        marginBottom: 25
+        marginBottom: 25,
+        marginTop: 25
       }}
     >
       <Grid item xs={6}>
-        <Typography variant="h5">Skills</Typography>
-        <Typography>Tempatmu mencari bekal untuk menghadapi dunia</Typography>
+        <Typography variant="h5">Sharing</Typography>
+        <Typography>Tempat untuk berbagi informasi</Typography>
       </Grid>
       <Img
         src={StudyIllustration}

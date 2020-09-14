@@ -27,8 +27,7 @@ export const CONFIG_RRFIREBASE = {
   userProfile: 'users',
   attachAuthIsReady: true,
   enableLogging: false,
-  updateProfileOnLogin: false,
-  useFirestoreForProfile: true
+  updateProfileOnLogin: false
 }
 
 export default {

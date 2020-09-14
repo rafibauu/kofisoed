@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
+import { ReactReduxFirebaseProvider } from 'react-redux-firebase'
 import { PersistGate } from 'redux-persist/es/integration/react'
 
 import rootStore from './state/store'
@@ -8,10 +9,10 @@ import AppElement from './App'
 import CircularLoading from './components/loading/circular'
 import * as serviceWorker from './serviceWorker'
 import { AutoLogin } from './state/modules/auth'
-import ENV from './env'
+import { APP_NAME, CLIENT_NAME } from './env'
 import Security from './utils/security'
 
-document.title = `${ENV.APP_NAME} | ${ENV.CLIENT_NAME}`
+document.title = `${APP_NAME} | ${CLIENT_NAME}`
 Security.preventPrintScreenKey()
 
 ReactDOM.render(
@@ -23,7 +24,9 @@ ReactDOM.render(
       }}
       persistor={rootStore.configurePersistor}
     >
-      <AppElement />
+      <ReactReduxFirebaseProvider {...rootStore.configureFirebase}>
+        <AppElement />
+      </ReactReduxFirebaseProvider>
     </PersistGate>
   </Provider>,
   document.getElementById('root')

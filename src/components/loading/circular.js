@@ -1,5 +1,4 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import FadeIn from 'react-fade-in'
 import Lottie from 'react-lottie'
 import { Grid, Typography, withStyles } from '@material-ui/core'
@@ -81,11 +80,5 @@ const AppPageLoading = React.memo((props) => {
     </div>
   )
 })
-
-AppPageLoading.propTypes = {
-  classes: PropTypes.instanceOf(Object).isRequired,
-  state: PropTypes.string,
-  text: PropTypes.string
-}
 
 export default withStyles(styles)(AppPageLoading)

@@ -20,9 +20,9 @@ export const AuthActionTypes = {
   LOGOUT_FAILED: 'talentlytica/auth/LOGOUT_FAILED'
 }
 
-export const Register = (credential) => ({
+export const Register = (credential, callback) => ({
   type: AuthActionTypes.REGISTRATION_REQUEST,
-  payload: { ...credential }
+  payload: { ...credential, callback }
 })
 
 export const AutoLogin = () => ({

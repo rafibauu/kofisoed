@@ -7,7 +7,7 @@ import CircularLoading from '../loading/circular'
 import LazyComponentErrorBoundary from '../error/boundary'
 
 const HomePage = React.lazy(() => import('../../pages/home'))
-const SkillsPage = React.lazy(() => import('../../pages/skills'))
+// const SharingPage = React.lazy(() => import('../../pages/sharing'))
 const CareerPage = React.lazy(() => import('../../pages/career'))
 const MarketplacePage = React.lazy(() => import('../../pages/marketplace'))
 const AboutPage = React.lazy(() => import('../../pages/about'))
@@ -29,7 +29,7 @@ const GuestLayout = () => {
           <Suspense fallback={<CircularLoading />}>
             <Switch>
               <Route exact path="/" render={() => <HomePage />} />
-              <Route path="/skills" render={() => <SkillsPage />} />
+              {/* <Route path="/sharing" render={() => <SharingPage />} /> */}
               <Route path="/career" render={() => <CareerPage />} />
               <Route path="/marketplace" render={() => <MarketplacePage />} />
               <Route path="/about" render={() => <AboutPage />} />
@@ -42,5 +42,7 @@ const GuestLayout = () => {
     </>
   )
 }
+
+// const mapStateToProps = ({ auth, firebase }) => ({ auth, firebaseAuth})
 
 export default GuestLayout

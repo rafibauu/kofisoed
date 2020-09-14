@@ -49,7 +49,7 @@ const Skills = (props) => {
             style={{ margin: '0 5px' }}
             onClick={() => setCategory('cerita-alumni')}
           >
-            Cerita Alumni
+            Article
           </Button>
           <Button
             variant={category === 'kenali-diri' ? 'contained' : 'text'}
@@ -57,14 +57,14 @@ const Skills = (props) => {
             style={{ margin: '0 5px' }}
             onClick={() => setCategory('kenali-diri')}
           >
-            Kenali Diri
+            Video
           </Button>
           <Button
             variant={category === 'tutorial' ? 'contained' : 'text'}
             color="primary"
             onClick={() => setCategory('tutorial')}
           >
-            Tutorial
+            Podcast
           </Button>
         </Grid>
         <Grid item xs={12} md={3}>

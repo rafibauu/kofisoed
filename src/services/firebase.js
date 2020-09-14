@@ -1,4 +1,5 @@
 import { getFirebase } from 'react-redux-firebase'
+import { getFirestore } from 'redux-firestore'
 
 export const getEmailMethod = async (email) => {
   const firebaseAuth = getFirebase().auth()
@@ -7,24 +8,39 @@ export const getEmailMethod = async (email) => {
 }
 
 export const createUser = async (credential, profile) => {
-  const firebaseAuth = getFirebase().auth()
+  const firebaseAuth = getFirebase()
   const create = await firebaseAuth.createUser(
-    { ...credential, signIn: false },
+    { ...credential },
     { ...profile }
   )
   return create
 }
 
-export const convertGSToUrl = async (gs) => {
+export const loginFirebase = async (credential) => {
   const firebase = getFirebase()
-  const storage = firebase.storage()
-  const gsReference = storage.refFromURL(gs)
-
-  const imageUrl = await gsReference.getDownloadURL()
-  return imageUrl
+  await firebase.login({ ...credential })
 }
 
-export const update = async (path, value) => {
+export const logoutFirebase = async () => {
+  const firebase = getFirebase()
+  await firebase.logout()
+}
+
+export const getAuthErrorMessage = (e) => {
+  const { message } = e
+  if (message.includes('There is no user record corresponding')) {
+    return 'Email tidak terdaftar'
+  }
+  if (message.includes('The password is invalid')) {
+    return 'Email atau password salah'
+  }
+  if (message.includes('The database connection is closing')) {
+    return 'Aplikasi memerlukan cookies, mohon refresh halaman'
+  }
+  return 'Koneksi bermasalah'
+}
+
+export const updateValue = async (path, value) => {
   const firebase = getFirebase()
   await firebase.update(path, value)
   return true
@@ -74,6 +90,12 @@ export const clearValue = async (paths) => {
   await firebase.ref().update(clearPath)
 }
 
+export const getValueWhereFirestore = async (key, value) => {
+  const firestore = getFirestore()
+  const data = await firestore.collection('users').where(key, '==', value).get()
+  return data
+}
+
 export const blobToDataURL = (blob) => {
   return new Promise((resolve, reject) => {
     const a = new FileReader()
@@ -87,18 +109,13 @@ export const blobToDataURL = (blob) => {
   })
 }
 
-export const getAuthErrorMessage = (e) => {
-  const { message } = e
-  if (message.includes('There is no user record corresponding')) {
-    return 'Email tidak terdaftar'
-  }
-  if (message.includes('The password is invalid')) {
-    return 'Email atau password salah'
-  }
-  if (message.includes('The database connection is closing')) {
-    return 'Aplikasi memerlukan cookies, mohon refresh halaman'
-  }
-  return 'Koneksi bermasalah'
+export const convertGSToUrl = async (gs) => {
+  const firebase = getFirebase()
+  const storage = firebase.storage()
+  const gsReference = storage.refFromURL(gs)
+
+  const imageUrl = await gsReference.getDownloadURL()
+  return imageUrl
 }
 
 export default true

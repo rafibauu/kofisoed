@@ -1,48 +1,70 @@
 import React from 'react'
+import { Redirect } from 'react-router-dom'
 import { connect } from 'react-redux'
-import Container from '@material-ui/core/Container'
 
 import {
   Register as RegisterAction,
   Login as LoginAction
 } from '../../state/modules/auth'
-import LoginComponent from './components/login'
 import RegisterComponent from './components/registration'
+import RegistrationSucceedComponent from './components/registrationSucceed'
+import LoginComponent from './components/login'
 
 const Auth = (props) => {
-  const { match, history, Register, Login } = props
+  const { match, history, auth, firebaseAuth, Register, Login } = props
   const { type } = match.params
 
-  const handleAuthChange = (authType) => {
-    history.push(authType)
+  const handleRedirect = (path, state) => {
+    history.push({
+      pathname: path,
+      state: { ...state }
+    })
   }
 
-  return (
-    <Container
-      maxWidth="md"
-      style={{
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center'
-      }}
-    >
-      {type === 'login' ? (
-        <LoginComponent handleAuthChange={handleAuthChange} Login={Login} />
-      ) : (
+  if (auth.isLoggedIn) {
+    return <Redirect to="/" />
+  }
+
+  switch (type) {
+    case 'registration':
+      return (
         <RegisterComponent
-          handleAuthChange={handleAuthChange}
+          authIsLoading={auth.isLoading}
+          handleRedirect={handleRedirect}
           Register={Register}
         />
-      )}
-    </Container>
-  )
+      )
+    case 'login':
+      return (
+        <LoginComponent
+          authIsLoading={auth.isLoading}
+          handleRedirect={handleRedirect}
+          Login={Login}
+        />
+      )
+    case 'registration-succeed':
+      return (
+        <RegistrationSucceedComponent
+          firebaseAuth={firebaseAuth}
+          handleRedirect={handleRedirect}
+        />
+      )
+    default:
+      return <></>
+  }
 }
 
+const mapStateToProps = ({ auth, firebase }) => ({
+  auth,
+  firebaseAuth: firebase.auth
+})
+
 const mapDispatchToProps = (dispatch) => ({
-  Register: (credential) => dispatch(RegisterAction(credential)),
+  Register: (credential, callback) =>
+    dispatch(RegisterAction(credential, callback)),
   Login: (credential) => dispatch(LoginAction(credential))
 })
 
-const enhance = connect(null, mapDispatchToProps)
+const enhance = connect(mapStateToProps, mapDispatchToProps)
 
 export default enhance(Auth)
